@@ -1,35 +1,41 @@
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class snackautomat {
     public static void main(String[] args) {
         boolean run = true;
-        byte arrayauswahl = -1;
-        double[] preise = {1.50, 1.08, 1.50, 1.00, 4.00};
-        String[] items = {"Waffel","Random Katjes", "Monster Energy", "Kaffee", "3er Kondom"};
 
-        while (run) {
-            byte menuauswahl = menu();
-            if (menuauswahl == 9) {
-                System.out.print("Vielen Dank für deine Benutzung!");
-                run = !run;
-            } else if (menuauswahl > 0 || menuauswahl < 5) {
-                arrayauswahl =  --menuauswahl;
-                System.out.println("Eine "+ items[arrayauswahl] + ". OK.");
-                boolean bezahlvorgang = bezahlen(preise[arrayauswahl]);
-                if  (!bezahlvorgang) {
-                    System.out.println("Irgendwas ist schiefgelaufen, bitte rufe die Hotline an!\nTel.: 42 42 42 42 ... Error Printing Lines!");
+        try (InputStream input = new FileInputStream("/home/ingressy/IdeaProjects/bgt241/src/snackautomat.conf")) {
+            Properties props = new Properties();
+            props.load(input);
+
+            while (run) {
+                byte menuauswahl = menu();
+                if (menuauswahl == 9) {
+                    System.out.print("Vielen Dank für deine Benutzung!");
                     run = !run;
-                } else if (bezahlvorgang) {
-                    System.out.println("Hier ist deine "+items[arrayauswahl]+"! OK.");
+                } else if (menuauswahl > 0 || menuauswahl < 5) {
+                    System.out.println("Eine "+ props.getProperty("produkt"+menuauswahl+"name") + ". OK.");
+                    boolean bezahlvorgang = bezahlen(Double.parseDouble(props.getProperty("produkt"+menuauswahl+"preis")));
+                    if  (!bezahlvorgang) {
+                        System.out.println("Irgendwas ist schiefgelaufen, bitte rufe die Hotline an!\nTel.: 42 42 42 42 ... Error Printing Lines!");
+                        run = !run;
+                    } else if (bezahlvorgang) {
+                        System.out.println("Hier ist deine "+ props.getProperty("produkt"+menuauswahl+"name") + "! OK.");
+                    }
+                }else if (menuauswahl < 0 ) {
+                    System.out.println("Bitte wiederhole deinen Eingabe!");
+                    menu();
+                }else {
+                    System.out.println("Bitte wiederhole deinen Eingabe!");
+                    menu();
                 }
-            }else if (menuauswahl < 0 ) {
-                System.out.println("Bitte wiederhole deinen Eingabe!");
-                menu();
-            }else {
-                System.out.println("Bitte wiederhole deinen Eingabe!");
-                menu();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -40,7 +46,7 @@ public class snackautomat {
         System.out.println("--- SNACKAUTOMAT 3000 ---");
         System.out.println("1. Waffel (1,50€)\n2. Random Katjes (1,08€)\n3. Monster Energy (1,50€)\n4. Kaffee (1,00€)\n5. Conrads 3er Kondom (4,00€)");
         System.out.println("9. Automaten zu beenden.");
-        System.out.print("Eigabe: ");
+        System.out.print("Eingabe: ");
         try {
             auswahl = menuein.nextByte();
             return auswahl;
