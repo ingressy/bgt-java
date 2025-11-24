@@ -1,31 +1,14 @@
 import java.awt.*;
-import java.io.*;
+import java.net.URI;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class stundenplan {
     static void main() {
-
         gui();
-
         String[][] stundenplan = new String[7] [5];
-
-        for (int i= 0; i < stundenplan[i].length; i++) {
-            if (i == 0) {
-                System.out.println("Mon");
-            } else if (i == 1) {
-                System.out.println("Die");
-            }else if (i == 2) {
-                System.out.println("Mit");
-            }else if (i == 3) {
-                System.out.println("Don");
-            }else if (i == 4) {
-                System.out.println("Fri");
-            }
-            for (int j = 0; j < stundenplan[i].length; j++) {
-                System.out.println(stundenplan[i][j]);
-            }
-        }
     }
+
     private static void gui() {
         String[] columnNames = {"Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
         String[][] data = { {"Mathe", "", "", "", ""},
@@ -35,7 +18,9 @@ public class stundenplan {
                 {"bla", "", "", "", ""}};
 
         JFrame frame = new JFrame();
-        JTable table = new JTable(data, columnNames);
+
+        edittable model = new edittable(data, columnNames);
+        JTable table = new JTable(model);
 
         JMenuBar menuBar = new JMenuBar();
 
@@ -45,14 +30,39 @@ public class stundenplan {
 
         JScrollPane sp = new JScrollPane(table);
         JMenu sonstiges = new JMenu("Sonstiges");
+        JMenu file = new JMenu("Datei");
+        JMenu einstellung = new JMenu("Einstellung");
 
         JMenuItem aboutItem = new JMenuItem("Über");
         aboutItem.addActionListener(e -> {aboutgui();});
+        
+        JMenuItem githubItem = new JMenuItem("Code");
+        githubItem.addActionListener(e -> {    try {Desktop.getDesktop().browse(URI.create("https://github.com/ingressy/bgt-java/blob/main/stundenplan.java"));} catch (Exception ex) {ex.printStackTrace();}});
+        
+        JCheckBoxMenuItem datumItem = new JCheckBoxMenuItem("Datum anzeigen");
+        datumItem.setState(false);
+        datumItem.addActionListener(e -> {});
+        
+        JMenuItem saveItem = new JMenuItem("Speichern");
+        
+        JCheckBoxMenuItem schreibenItem = new JCheckBoxMenuItem("Beschreibbar");
+        schreibenItem.setState(false);
+        schreibenItem.addActionListener(e -> model.setEditableCustom(schreibenItem.getState()));
 
         frame.add(sp);
 
+        menuBar.add(file);
+        menuBar.add(einstellung);
         menuBar.add(sonstiges);
+
+        file.add(saveItem);
+
+        einstellung.add(datumItem);
+        einstellung.add(schreibenItem);
+
+        sonstiges.add(githubItem);
         sonstiges.add(aboutItem);
+
         frame.setJMenuBar(menuBar);
 
         frame.setVisible(true);
@@ -66,7 +76,7 @@ public class stundenplan {
 
         JLabel title = new JLabel("Stundenplan");
         JLabel version = new JLabel("Version 1.0");
-        JLabel author = new JLabel("(c) 2025 Noora");
+        JLabel author = new JLabel("(c) 2017-2025 Noora");
 
         title.setAlignmentX(JLabel.CENTER_ALIGNMENT);
         version.setAlignmentX(JLabel.CENTER_ALIGNMENT);
@@ -79,5 +89,22 @@ public class stundenplan {
 
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
+    }
+}
+
+class edittable extends DefaultTableModel {
+    private boolean editable = false;
+
+    public edittable(Object[][] data, Object[] columns) {
+        super(data, columns);
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int column) {
+        return editable;
+    }
+
+    public void setEditableCustom(boolean edit) {
+        editable = edit;
     }
 }
