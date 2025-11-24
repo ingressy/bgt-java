@@ -1,15 +1,22 @@
-import java.awt.*;
+import java.awt.Desktop;
+import java.awt.Frame;
+import java.util.List;
+
 import java.net.URI;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.io.*;
 
 public class stundenplan {
+
+    private static File currentFile = null;
+
     static void main() {
         gui();
         String[][] stundenplan = new String[7] [5];
@@ -69,24 +76,71 @@ public class stundenplan {
 
         JMenuItem saveItem = new JMenuItem("Speichern");
         saveItem.addActionListener(e -> {
-            System.out.println(model.getColumnName(0));
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow >= 0) {
-
-                // Wenn du ein Sortier-TableRowSorter benutzt, vorher ins Model konvertieren
-                int modelRow = table.convertRowIndexToModel(selectedRow);
-
-                int colCount = model.getColumnCount();
-                for (int col = 0; col < colCount; col++) {
-                    Object cellValue = model.getValueAt(modelRow, col);
-                    System.out.println(cellValue);
-                }
-            } else {
-                System.out.println("Keine Zeile ausgewählt");
+            if (currentFile == null) {
+                JOptionPane.showMessageDialog(frame, "Keine Datei geöffnet zum Speichern!", "Fehler", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            try (BufferedWriter writer = Files.newBufferedWriter(currentFile.toPath())) {
+                int rowCount = model.getRowCount();
+                int colCount = model.getColumnCount();
 
+                for (int row = 0; row < rowCount; row++) {
+                    for (int col = 0; col < colCount; col++) {
+                        Object value = model.getValueAt(row, col);
+                        writer.write(value != null ? value.toString() : "");
+                        if (col < colCount - 1) writer.write(";");
+                    }
+                    writer.newLine();
+                }
 
+                System.out.println("Datei gespeichert: " + currentFile.getAbsolutePath());
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(frame,
+                        "Fehler beim Schreiben der Datei: " + ex.getMessage(),
+                        "Fehler",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         });
+
+        JMenuItem saveasItem = new JMenuItem("Speichern als");
+        saveasItem.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Backbord IT Stundenplan Datei", "bis"));
+
+            int result = fileChooser.showSaveDialog(frame);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                if (!selectedFile.getName().toLowerCase().endsWith(".bis")) {
+                    selectedFile = new File(selectedFile.getParentFile(), selectedFile.getName() + ".bis");
+                }
+
+                try (BufferedWriter writer = Files.newBufferedWriter(selectedFile.toPath())) {
+                    int rowCount = model.getRowCount();
+                    int colCount = model.getColumnCount();
+
+                    for (int row = 0; row < rowCount; row++) {
+                        for (int col = 0; col < colCount; col++) {
+                            Object value = model.getValueAt(row, col);
+                            writer.write(value != null ? value.toString() : "");
+                            if (col < colCount - 1) writer.write(";");
+                        }
+                        writer.newLine();
+                    }
+
+                    JOptionPane.showMessageDialog(frame, "Tabelle gespeichert: " + selectedFile.getAbsolutePath(), "Info", JOptionPane.INFORMATION_MESSAGE);
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame,
+                            "Fehler beim Schreiben der Datei: " + ex.getMessage(),
+                            "Fehler",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
 
         JCheckBoxMenuItem schreibenItem = new JCheckBoxMenuItem("Beschreibbar");
         schreibenItem.setState(false);
@@ -99,6 +153,7 @@ public class stundenplan {
             int result = fileChooser.showOpenDialog(frame);
             if (result == JFileChooser.APPROVE_OPTION ) {
                 File selectedFile = fileChooser.getSelectedFile();
+                currentFile = selectedFile;
                 String fileName = selectedFile.getName();
                 String extension = "";
 
@@ -112,7 +167,26 @@ public class stundenplan {
                             "Fehler",
                             JOptionPane.ERROR_MESSAGE);
                 } else {
-                    //todo
+                    frame.setTitle("Backbord IT | Stundenplan | " + selectedFile.getAbsolutePath());
+                    try {
+                        List<String> lines = Files.readAllLines(selectedFile.toPath());
+
+                        // Alte Daten löschen
+                        model.setRowCount(0);
+
+                        for (String line : lines) {
+                            String[] values = line.split(";"); // Trennzeichen
+                            model.addRow(values);
+                        }
+
+                        System.out.println("Datei geladen: " + selectedFile.getAbsolutePath());
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(frame,
+                                "Fehler beim Lesen der Datei: " + ex.getMessage(),
+                                "Fehler", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -123,6 +197,7 @@ public class stundenplan {
 
         file.add(openItem);
         file.add(saveItem);
+        file.add(saveasItem);
 
         einstellung.add(datumItem);
         einstellung.add(schreibenItem);
