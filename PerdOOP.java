@@ -9,12 +9,13 @@ public class PerdOOP {
         System.out.println(mika);
         System.out.println("Das Pferd hat was mit " + mika.Isst("Lassage")+ " kcal gegessen!");
         System.out.println(mika.Laeft(10));
+        System.out.println(mika.toLasagne());
 
     }
 
     //Attribute
     private String name;
-    private String marke;
+    private final String marke;
     private int hoechsg;
     private int kcal;
     private double pstark;
@@ -56,9 +57,16 @@ public class PerdOOP {
         return kEssen;
     }
 
+    public String toLasagne() {
+        if (this.kcal > 0) {
+            return "Lassagne, lecker lecker Lassagne";
+        }
+        return "Nicht möglich!";
+    }
 
     @Override
     public String toString() {
         return "Das Pferd heißt " + this.name + ",hat die Marke " + this.marke + ", läuft " + this.hoechsg +"km/h und hat "+  this.kcal + " Kalorien und hat " + this.pstark + "PS";
     }
 }
+
