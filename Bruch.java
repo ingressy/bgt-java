@@ -32,8 +32,7 @@ public class Bruch {
     }
 
     private static Bruch kuerzen(Bruch b1) {
-        int teiler = ggT(b1.zaehler, b1.nenner);
-        return new Bruch(b1.zaehler / teiler, b1.nenner / teiler);
+        return new Bruch(b1.zaehler / ggT(b1.zaehler, b1.nenner), b1.nenner / ggT(b1.zaehler, b1.nenner));
     }
     private static int ggT (int a, int b) {
         while (b != 0) {
